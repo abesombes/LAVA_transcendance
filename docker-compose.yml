@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  nestjs:
+    build: ./back
+    ports:
+      - "3000:3000"
+    container_name: nestjs_c
+    volumes:
+      - type: bind
+        source: ./back/src
+        target: /usr/src/app/back/src
+    restart: unless-stopped
+    command: npm rum start:dev
+  vuejs:
+    build: ./front
+    ports:
+     - "8080:8080"
+    container_name: vuejs_c
+    volumes:
+      - type: bind
+        source: ./front/src
+        target: /usr/src/app/front/src
+    restart: unless-stopped
+    command: npm run serve
