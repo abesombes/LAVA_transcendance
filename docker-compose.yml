@@ -11,14 +11,24 @@ services:
         target: /usr/src/app/back/src
     restart: unless-stopped
     command: npm rum start:dev
+    networks: 
+     - internal
   vuejs:
     build: ./front
     ports:
      - "8080:8080"
     container_name: vuejs_c
+    depends_on:
+      - nestjs
+    networks:
+      - internal
     volumes:
       - type: bind
         source: ./front/src
         target: /usr/src/app/front/src
     restart: unless-stopped
     command: npm run serve
+networks: 
+  internal:
+    driver: bridge
+
