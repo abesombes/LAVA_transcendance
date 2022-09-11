@@ -8,4 +8,8 @@ export class AppController {
   getHello(): any {
     return this.appService.getHello();
   }
+  @Get()
+  getRootRoute(){
+    return 'hi there!';
+  }
 }
