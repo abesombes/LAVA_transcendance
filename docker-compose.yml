@@ -40,8 +40,8 @@ services:
       - '${POSTGRES_PORT}:${POSTGRES_PORT}'
     volumes:
       - type: bind
-        source: ./back/db
-        target: /var/lib/postgresql/data
+        source: ./db
+        target: /usr/src/app/postgresql/data
   dbadmin:
     image: dpage/pgadmin4
     restart: always
