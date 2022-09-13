@@ -1,3 +1,19 @@
-### List all users
+### Insert a New User
 
-GET http://localhost:3000/users/
+POST  http://localhost:3000/api/users/create
+content-type: application/json
+
+{
+    "email": "alexandre@unique-paris.fr",
+    "name": "Alexandre BESOMBES"
+}
+
+### Fetch All Users
+GET http://localhost:3000/api/fetch-users
+
+
+### Fetch One Specific User
+GET http://localhost:3000/api/fetch-user/2
+
+### Delete One Specific User
+DELETE http://localhost:3000/api/delete-user/1
