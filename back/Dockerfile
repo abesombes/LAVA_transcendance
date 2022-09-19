@@ -18,10 +18,8 @@ RUN npm install @prisma/client express @types/express
 RUN npm install -D typescript --save-dev
 RUN npm install -D ts-node --save-dev
 RUN npm install --save-dev @types/node
-RUN npx prisma generate
-RUN npx prisma migrate dev --name init
 
-# COPY prisma files
+# COPY Prisma files
 COPY prisma/ /prisma/
 
 # COPY ENV variable
@@ -32,6 +30,9 @@ COPY tsconfig.json ./
 
 # Bundle app source
 COPY . .
+
+# RUN Prisma Generate
+RUN npx prisma generate
 
 # Creates a "dist" folder with the production build
 RUN npm run build
