@@ -19,6 +19,7 @@ RUN npm install -D typescript --save-dev
 RUN npm install -D ts-node --save-dev
 RUN npm install --save-dev @types/node
 RUN npx prisma generate
+RUN npx prisma migrate dev --name init
 
 # COPY prisma files
 COPY prisma/ /prisma/
