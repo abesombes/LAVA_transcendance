@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Param, Delete } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaClient } from '@prisma/client';
+import { UserDto } from './dtos/user.dto'
 
 const prisma = new PrismaClient();
 
@@ -10,8 +11,8 @@ export class AppController {
 
 //email: string, name: string
 
-  @Post('api/users/create')
-  async createUser(@Body() body): Promise<any> {
+  @Put('api/users/create')
+  async createUser(@Body() body: UserDto): Promise<any> {
     const user = await prisma.user.create({
       data: {
         email: body.email, 
@@ -19,6 +20,16 @@ export class AppController {
         },
       })
 }
+
+  @Post('api/users/create-user')
+  async createUser2(@Body() body: UserDto): Promise<any> {
+    const user = await prisma.user.create({
+      data: {
+        email: body.email, 
+        name: body.name,
+        },
+      })
+  }
 
 
   @Get('api/fetch-users')

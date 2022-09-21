@@ -18,6 +18,10 @@ RUN npm install @prisma/client express @types/express
 RUN npm install -D typescript --save-dev
 RUN npm install -D ts-node --save-dev
 RUN npm install --save-dev @types/node
+RUN npm install --save @nestjs/swagger
+RUN npm install class-validator class-transformer
+
+
 
 # COPY Prisma files
 COPY prisma/ /prisma/

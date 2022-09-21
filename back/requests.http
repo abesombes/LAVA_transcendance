@@ -1,11 +1,21 @@
 ### Insert a New User
 
-POST  http://localhost:3000/api/users/create
+PUT  http://localhost:3000/api/users/create
 content-type: application/json
 
 {
     "email": "alexandre@unique-paris.fr",
     "name": "Alexandre BESOMBES"
+}
+
+### Insert a New User
+
+POST  http://localhost:3000/api/users/create-user
+content-type: application/json
+
+{
+    "email": "vanessa@unique-paris.fr",
+    "name": "Vanessa ZAPATA"
 }
 
 ### Fetch All Users
