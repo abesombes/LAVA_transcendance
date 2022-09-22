@@ -38,13 +38,14 @@ export class AppController {
     return (users);
   }
 
-  @Get('api/fetch-user/:id')
-  async fetchUser(@Param('id') id: string): Promise<any> {
+  @Get('api/fetch-user/:id/:id2')
+  async fetchUser(@Param('id') id: string, @Param('id2') id2: string): Promise<any> {
     const user = await prisma.user.findUnique({
       where: {
         id: parseInt(id), // or Number(id)
       },
     })
+    console.log(id2);
     return (user);
   }
 

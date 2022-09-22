@@ -49,6 +49,7 @@ services:
       - postgres
     ports:
       - "3000:3000"
+      - "5555:5555"
     container_name: nestjs_c
     volumes:
       - type: bind
