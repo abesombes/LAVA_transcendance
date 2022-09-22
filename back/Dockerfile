@@ -20,8 +20,7 @@ RUN npm install -D ts-node --save-dev
 RUN npm install --save-dev @types/node
 RUN npm install --save @nestjs/swagger
 RUN npm install class-validator class-transformer
-
-
+RUN npm install npm-run-all
 
 # COPY Prisma files
 COPY prisma/ /prisma/

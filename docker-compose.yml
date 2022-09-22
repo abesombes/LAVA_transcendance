@@ -56,7 +56,7 @@ services:
         source: ./back/src
         target: /usr/src/app/back/src
     restart: unless-stopped
-    command: npm run start:migrate:dev
+    command: npm run start:dbpull:dev
     networks: 
      - internal
 networks: 

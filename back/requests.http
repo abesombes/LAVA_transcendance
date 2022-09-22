@@ -4,7 +4,7 @@ PUT  http://localhost:3000/api/users/create
 content-type: application/json
 
 {
-    "email": "alexandre@unique-paris.fr",
+    "email": "alexandreb@unique-paris.fr",
     "name": "Alexandre BESOMBES"
 }
 
