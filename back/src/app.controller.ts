@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Put, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Param, Delete, UserGuards, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaClient } from '@prisma/client';
 import { UserDto } from './dtos/user.dto'
+import { AuthGuard } from '@nestjs/passport'
 
 const prisma = new PrismaClient();
 
@@ -11,6 +12,11 @@ export class AppController {
 
 //email: string, name: string
 
+  @Get('login/google)
+  async googleAuth(){
+
+  }
+
   @Put('api/users/create')
   async createUser(@Body() body: UserDto): Promise<any> {
     const user = await prisma.user.create({
@@ -19,7 +25,7 @@ export class AppController {
         name: body.name,
         },
       })
-}
+  }
 
   @Post('api/users/create-user')
   async createUser2(@Body() body: UserDto): Promise<any> {
