@@ -14,5 +14,9 @@ export class UserDto {
 
   @IsString()
   @MaxLength(20)
-  name: string;
+  nickname: string;
+
+  @IsString()
+  @MaxLength(30)
+  password: string;
 }
