@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Post, Put, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaClient } from '@prisma/client';
-import { UserDto } from './dtos/user.dto'
-// import { AuthGuard } from '@nestjs/passport'
+import { UserDto } from './dtos/user.dto';
+import { AuthGuard } from '@nestjs/passport'
 
 const prisma = new PrismaClient();
 
@@ -10,12 +10,18 @@ const prisma = new PrismaClient();
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-//email: string, name: string
 
-  // @Get('login/google)
-  // async googleAuth(){
+  @Get()
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req) {
 
-  // }
+  }
+
+  @Get('auth/google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleAuthRedirect(@Req() req){
+    return this.appService.googleLogin(req)
+  }
 
   @Put('api/users/create')
   async createUser(@Body() body: UserDto): Promise<any> {
@@ -65,10 +71,10 @@ export class AppController {
     return (user);
   }
 
-  @Get('api')
-  getHello(): any {
-    return this.appService.getHello();
-  }
+  // @Get('api')
+  // getHello(): any {
+  //   return this.appService.getHello();
+  // }
 
   @Get()
   getRootRoute(){
