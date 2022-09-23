@@ -9,6 +9,7 @@ COPY package*.json ./
 # RUN apt-get update -y
 # RUN apt-get upgrade -y
 # RUN apt-get install vim -y
+
 RUN apk add vim
 # Install app dependencies
 RUN npm install

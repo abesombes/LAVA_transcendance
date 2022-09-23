@@ -25,6 +25,7 @@ RUN npm install npm-run-all
 RUN npm install @nestjs/passport
 RUN npm install google-auth-library
 RUN npm install passport-google-oauth20
+RUN npm install --save @nestjs/config
 
 # COPY Prisma files
 COPY prisma/ /prisma/

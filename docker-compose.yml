@@ -51,12 +51,15 @@ services:
       - "3000:3000"
       - "5555:5555"
     container_name: nestjs_c
+    # environment:
+    #   - GOOGLE_OAUTH_CS=${GOOGLE_OAUTH_CS}
+    #   - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
     volumes:
       - type: bind
         source: ./back/src
         target: /usr/src/app/back/src
     restart: unless-stopped
-    command: npm run start:dbpull:dev
+    command: npm run start:dbpush:dev
     networks: 
      - internal
 networks: 
