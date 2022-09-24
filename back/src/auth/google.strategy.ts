@@ -6,7 +6,8 @@ import { Injectable } from '@nestjs/common'
 
 @Injectable()
 
-export class GoogleStrategy extends PassportStrategy(Strategy, 'google')
+export class GoogleStrategy 
+        extends PassportStrategy(Strategy, 'google')
 {
     constructor(){
         super({

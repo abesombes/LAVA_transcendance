@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { PrismaClient } from '@prisma/client';
 import { UserDto } from './dtos/user.dto';
 import { AuthGuard } from '@nestjs/passport'
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -10,6 +11,9 @@ const prisma = new PrismaClient();
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  hashData(data:string): Promise<string> {
+    return argon2.hash(data);
+  }
 
   @Get()
   @UseGuards(AuthGuard('google'))
@@ -29,7 +33,7 @@ export class AppController {
       data: {
         email: body.email, 
         nickname: body.nickname,
-        password: body.password
+        hash: body.password
         },
       })
   }
@@ -40,7 +44,7 @@ export class AppController {
       data: {
         email: body.email, 
         nickname: body.nickname,
-        password: body.password
+        hash: body.password
         },
       })
   }
@@ -56,7 +60,7 @@ export class AppController {
   async fetchUser(@Param('id') id: string): Promise<any> {
     const user = await prisma.user.findUnique({
       where: {
-        id: parseInt(id), // or Number(id)
+        id: id,
       },
     })
     return (user);
@@ -66,7 +70,7 @@ export class AppController {
   async deleteUser(@Param('id') id: string): Promise<any> {
     const user = await prisma.user.delete({
       where: {
-        id: parseInt(id), // or Number(id)
+        id: id,
       },
     })
     return (user);
