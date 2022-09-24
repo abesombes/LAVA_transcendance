@@ -26,6 +26,13 @@ RUN npm install @nestjs/passport
 RUN npm install google-auth-library
 RUN npm install passport-google-oauth20
 RUN npm install --save @nestjs/config
+RUN npm install uuid @types/uuid
+RUN npm install argon2 @types/argon2
+RUN npm install bcrypt@latest --save
+RUN npm install @types/bcrypt
+RUN npm install --save @nestjs/jwt passport-jwt
+RUN npm install --save @types/passport-jwt
+RUN npm install @nestjs/passport passport
 
 # COPY Prisma files
 COPY prisma/ /prisma/

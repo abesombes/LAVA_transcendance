@@ -13,7 +13,7 @@ export class UserDto {
   email: string;
 
   @IsString()
-  @MaxLength(20)
+  @MaxLength(30)
   nickname: string;
 
   @IsString()
