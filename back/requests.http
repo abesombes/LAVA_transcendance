@@ -35,6 +35,18 @@ POST http://localhost:3000/auth/local/signup
 content-type: application/json
 
 {
-    "email": "test@gmail.com",
-    "password": "astronauta"
+    "email": "test3@gmail.com",
+    "nickname": "Alphaboy",
+    "password": "12345abcde"
+}
+
+### Auth - Local Signin
+
+POST http://localhost:3000/auth/local/signin
+content-type: application/json
+
+{
+    "email": "test3@gmail.com",
+    "nickname": "Alphaboy",
+    "password": "12345abcde"
 }
