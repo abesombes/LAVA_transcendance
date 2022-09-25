@@ -50,3 +50,9 @@ content-type: application/json
     "nickname": "Alphaboy",
     "password": "12345abcde"
 }
+
+### Auth - Logout
+
+POST http://localhost:3000/auth/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNGIwYzIyMC1lNzliLTRiZGYtYWM2Ny1hYmM0MDliZDk4YTYiLCJlbWFpbCI6InRlc3QzQGdtYWlsLmNvbSIsImlhdCI6MTY2NDEzNTQzNSwiZXhwIjoxNjY0MTM2MzM1fQ.dJThqBzykNgE0nt19odNrX_-ncYM9LFKrbtquoFCEow
+
