@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { UserDto } from './dtos/user.dto';
 import { AuthGuard } from '@nestjs/passport'
 import * as argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -12,7 +13,8 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   hashData(data:string): Promise<string> {
-    return argon2.hash(data);
+    // return argon2.hash(data);
+    return bcrypt.hash(data,10);
   }
 
   @Get()

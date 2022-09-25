@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { AtStrategy } from './strategies/at.strategy';
-import { RtStrategy } from './strategies/rt.strategy';
+import { AtStrategy } from './strategies';
+import { RtStrategy } from './strategies';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 
 @Module({
-    imports: [JwtModule.register({})],
+    imports: [JwtModule.register({ secret: 'hard!to-guess_secret' })],
     controllers: [AuthController],
-    providers: [AuthService, AtStrategy, RtStrategy]
+    providers: [AuthService, AtStrategy, RtStrategy],
+    exports: [JwtModule]
 })
 export class AuthModule {}

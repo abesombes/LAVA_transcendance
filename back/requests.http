@@ -32,3 +32,9 @@ DELETE http://localhost:3000/api/delete-user/1
 ### Auth - Local Signup
 
 POST http://localhost:3000/auth/local/signup
+content-type: application/json
+
+{
+    "email": "test@gmail.com",
+    "password": "astronauta"
+}

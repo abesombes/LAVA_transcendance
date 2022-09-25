@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto } from './dto/auth.dto';
+import { AuthDto } from './dto';
 // import * as bcrypt from 'bcrypt';
 import * as argon2 from 'argon2';
 import { Tokens } from './types';
@@ -8,13 +8,10 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-    constructor(private prisma: PrismaService,
+    constructor(
+        private prisma: PrismaService,
         private jwtService: JwtService
-        ){}
-
-    hashData(data:string){
-        return argon2.hash(data);
-    }
+    ) {}
 
     async getTokens(userId: string, email: string) {
         const [at, rt] = await Promise.all([
@@ -54,13 +51,35 @@ export class AuthService {
                 hash,
             }
         });
-        const tokens = await this.getTokens(newUser.id, newUser.email)
+        const tokens = await this.getTokens(newUser.id, newUser.email);
+        await this.updateRtHash(newUser.id, tokens.refresh_token);
         return tokens;
     }
+
+
 
     signinLocal(){
 
     }
     logout(){}
     refreshTokens(){}
+
+
+    async updateRtHash(userId: string, rt: string) {
+        const hash = await this.hashData(rt)
+        await this.prisma.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                hashedRt: hash,
+            }
+        });
+    }
+
+    hashData(data:string){
+        // return bcrypt(data, 10);
+        return argon2.hash(data);
+    }
+
 }

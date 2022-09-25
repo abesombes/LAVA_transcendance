@@ -17,5 +17,5 @@ model User {
   firstname   String?
   surname     String?
   hash        String
-  hashRt      String?
+  hashedRt    String?
 }
