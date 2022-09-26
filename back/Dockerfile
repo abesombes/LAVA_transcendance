@@ -33,7 +33,7 @@ RUN npm install @types/bcrypt
 RUN npm install --save @nestjs/jwt passport-jwt
 RUN npm install --save @types/passport-jwt
 RUN npm install @nestjs/passport passport
-RUN npm install jsonwebtoken
+# RUN npm install jsonwebtoken
 
 # COPY Prisma files
 COPY prisma/ /prisma/

@@ -6,9 +6,12 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 
 @Module({
-    imports: [JwtModule.register({ secret: 'hard!to-guess_secret' })],
+    imports: [JwtModule.register({ 
+        secret: 'hard!to-guess_secret',
+        signOptions: {expiresIn: 900}
+    })],
     controllers: [AuthController],
     providers: [AuthService, AtStrategy, RtStrategy],
-    exports: [JwtModule]
+    exports: [AuthService, JwtModule]
 })
 export class AuthModule {}
