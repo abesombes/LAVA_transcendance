@@ -96,9 +96,13 @@ export class AuthService {
                 id: userId
             }
         });
+        if (!user)
+            console.log("no such user");
         if (!user) throw new ForbiddenException("Access Denied");
-        
+        console.log(user.hashedRt);
         const rtMatches = await argon2.verify(user.hashedRt, rt);
+        if (!rtMatches)
+            console.log("wrong password provided");
         if (!rtMatches) throw new ForbiddenException("Access Denied");
 
         const tokens = await this.getTokens(user.id, user.email);

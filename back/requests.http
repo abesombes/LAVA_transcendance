@@ -35,8 +35,8 @@ POST http://localhost:3000/auth/local/signup
 content-type: application/json
 
 {
-    "email": "test3@gmail.com",
-    "nickname": "Alphaboy",
+    "email": "test4@gmail.com",
+    "nickname": "Alphaboy4",
     "password": "12345abcde"
 }
 
@@ -53,10 +53,12 @@ content-type: application/json
 
 ### Auth - Logout
 
-POST http://localhost:3000/auth/logout
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNGIwYzIyMC1lNzliLTRiZGYtYWM2Ny1hYmM0MDliZDk4YTYiLCJlbWFpbCI6InRlc3QzQGdtYWlsLmNvbSIsImlhdCI6MTY2NDE0MjY0MSwiZXhwIjoxNjY0MTQzNTQxfQ.O_dJsdl8Qqq8lYbIglMgnDtvU95VydnSqBOlEi1lO7c
+POST http://localhost:3000/auth/logout HTTP/1.1
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NmYyY2U5My00OWJlLTQ4N2UtYTVlMC02NDU0OWIyNzY4NTUiLCJlbWFpbCI6InRlc3QzQGdtYWlsLmNvbSIsImlhdCI6MTY2NDIwMTIxNSwiZXhwIjoxNjY0MjAyMTE1fQ.u_GUDNSsotps-sebjVayzf1pyGvtHoXW3nJdZRRMNCo
 
 ### Auth - Refresh
 
-POST http://localhost:3000/auth/refresh
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNGIwYzIyMC1lNzliLTRiZGYtYWM2Ny1hYmM0MDliZDk4YTYiLCJlbWFpbCI6InRlc3QzQGdtYWlsLmNvbSIsImlhdCI6MTY2NDE0NTY2MiwiZXhwIjoxNjY0NzUwNDYyfQ.5kb-XYjfmh2hrac84mEh8O2HuvzDmxza2zYOMVRGIfE
+POST http://localhost:3000/auth/refresh HTTP/1.1
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NmYyY2U5My00OWJlLTQ4N2UtYTVlMC02NDU0OWIyNzY4NTUiLCJlbWFpbCI6InRlc3QzQGdtYWlsLmNvbSIsImlhdCI6MTY2NDE5NTIxMywiZXhwIjoxNjY0ODAwMDEzfQ.p-OYTeEN_bDMrOwYuzmJ9jGWNV7ps3v4XsFq8SZzxo0
