@@ -33,6 +33,8 @@ RUN npm install @types/bcrypt
 RUN npm install --save @nestjs/jwt passport-jwt
 RUN npm install --save @types/passport-jwt
 RUN npm install @nestjs/passport passport
+RUN npm install unique-username-generator --save
+RUN npm install generate-password --save
 # RUN npm install jsonwebtoken
 
 # COPY Prisma files

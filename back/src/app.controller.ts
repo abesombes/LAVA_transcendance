@@ -12,23 +12,6 @@ const prisma = new PrismaClient();
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  hashData(data:string): Promise<string> {
-    // return argon2.hash(data);
-    return bcrypt.hash(data,10);
-  }
-
-  @Get()
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {
-
-  }
-
-  @Get('auth/google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req){
-    return this.appService.googleLogin(req)
-  }
-
   @Put('api/users/create')
   async createUser(@Body() body: UserDto): Promise<any> {
     const user = await prisma.user.create({

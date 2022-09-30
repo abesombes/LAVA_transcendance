@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { GoogleStrategy} from './auth/google.strategy'
+import { GoogleStrategy} from './auth/strategies/google.strategy'
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';

@@ -1,10 +1,11 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto';
-// import * as bcrypt from 'bcrypt';
 import * as argon2 from 'argon2';
 import { Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
+import { generateFromEmail, generateUsername } from "unique-username-generator";
+import { generate } from "generate-password";
 
 @Injectable()
 export class AuthService {
@@ -48,7 +49,7 @@ export class AuthService {
             data: {
                 email: dto.email,
                 nickname: dto.nickname,
-                hash,
+                hash: hash,
             }
         });
         const tokens = await this.getTokens(newUser.id, newUser.email);
@@ -91,22 +92,20 @@ export class AuthService {
     }
 
     async refreshTokens(userId: string, rt: string){
-        const user = await this.prisma.user.findUnique({
+        const existing_user = await this.prisma.user.findUnique({
             where: {
                 id: userId
             }
         });
-        if (!user)
-            console.log("no such user");
-        if (!user) throw new ForbiddenException("Access Denied");
-        console.log(user.hashedRt);
-        const rtMatches = await argon2.verify(user.hashedRt, rt);
+        if (!existing_user) throw new ForbiddenException("Access Denied");
+        
+        const rtMatches = await argon2.verify(existing_user.hashedRt, rt);
         if (!rtMatches)
             console.log("wrong password provided");
         if (!rtMatches) throw new ForbiddenException("Access Denied");
 
-        const tokens = await this.getTokens(user.id, user.email);
-        await this.updateRtHash(user.id, tokens.refresh_token);
+        const tokens = await this.getTokens(existing_user.id, existing_user.email);
+        await this.updateRtHash(existing_user.id, tokens.refresh_token);
         return tokens;
     }
 
@@ -124,8 +123,40 @@ export class AuthService {
     }
 
     hashData(data:string){
-        // return bcrypt(data, 10);
         return argon2.hash(data);
     }
 
+    async googleLogin(req){
+    if (!req.user){
+        return 'No user from Google'
+    }
+    const existing_user = await this.prisma.user.findUnique({
+        where: {
+            email: req.user.email,
+        }
+    });
+
+    if (!existing_user)
+    {
+        const password = generate(
+            {	
+                length: 10,
+                numbers: true
+            });
+            console.log("password " + password);
+        const hash = await this.hashData(password);
+            console.log("hash " + hash);
+        const new_user = await this.prisma.user.create({
+            data: {
+                email: req.user.email,
+                nickname: generateFromEmail(req.user.email, 3),
+                hash: hash
+            },
+        })
+    }
+    return ({
+        message: 'User Info from Google',
+        user: req.user
+    })
+    }
 }
