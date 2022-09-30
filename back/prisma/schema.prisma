@@ -16,6 +16,7 @@ model User {
   nickname    String @unique
   firstname   String?
   surname     String?
+  avatar      String?
   hash        String
   hashedRt    String?
 }

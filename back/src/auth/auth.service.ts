@@ -127,6 +127,7 @@ export class AuthService {
     }
 
     async googleLogin(req){
+    var tokens: Tokens;
     if (!req.user){
         return 'No user from Google'
     }
@@ -143,20 +144,26 @@ export class AuthService {
                 length: 10,
                 numbers: true
             });
-            console.log("password " + password);
         const hash = await this.hashData(password);
-            console.log("hash " + hash);
         const new_user = await this.prisma.user.create({
             data: {
                 email: req.user.email,
+                firstname: req.user.firstName,
+                surname: req.user.lastName,
                 nickname: generateFromEmail(req.user.email, 3),
-                hash: hash
+                hash: hash,
+                avatar: req.user.picture
             },
         })
+        tokens = await this.getTokens(new_user.id, new_user.email);
+        await this.updateRtHash(new_user.id, tokens.refresh_token);
     }
-    return ({
-        message: 'User Info from Google',
-        user: req.user
-    })
+    else
+    {
+        console.log("Welcome back existing User");
+        tokens = await this.getTokens(existing_user.id, existing_user.email);
+        await this.updateRtHash(existing_user.id, tokens.refresh_token);
+    }
+    return tokens;
     }
 }
