@@ -64,3 +64,8 @@ POST http://localhost:3000/auth/refresh
 Host: localhost
 Accept: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwY2Y5NjZkYy03ZjgzLTRjYjYtODc3MS0wMmU3MDllZGM2NGIiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDUyNjMwNCwiZXhwIjoxNjY1MTMxMTA0fQ.l7G1a3ZRR1T64HMles7BZZ3Immemvoa7KMGOEyZz4xg
+
+
+
+### Test Request to Marvin
+GET https://api.intra.42.fr/oauth/authorize?client_id=42a3b64eee675b3850058c804e485115de4a51ddc88cc1c76f093f17d48568ee&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fmarvin%2Fcallback&response_type=code

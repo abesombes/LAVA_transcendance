@@ -166,4 +166,11 @@ export class AuthService {
     }
     return tokens;
     }
+
+
+    async marvinLogin(code: string, state: string){
+        if (!state || state != 'm5TZ6Abf9rd9Z5WF74W2')
+            return ("Illegal middleman detection!");
+
+    }
 }

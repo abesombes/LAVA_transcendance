@@ -1,20 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Redirect, Param, Query, Post, Req, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { Tokens } from './types';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-
+import { generate } from "generate-password";
 
 
 @Controller('auth')
 export class AuthController {
     constructor(private authService:AuthService){}
 
-    @Get('google/')
+    @Get('google')
     @UseGuards(AuthGuard('google'))
     async googleAuth(@Req() req) {
-  
+        console.log("I am in Google Auth");
     }
   
     @Get('google/callback')
@@ -22,6 +22,19 @@ export class AuthController {
     googleAuthRedirect(@Req() req: Request){
       return this.authService.googleLogin(req)
     }
+
+    @Get('marvin')
+    @Redirect('https://api.intra.42.fr/oauth/authorize?client_id=42a3b64eee675b3850058c804e485115de4a51ddc88cc1c76f093f17d48568ee&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fmarvin%2Fcallback&state=m5TZ6Abf9rd9Z5WF74W2&response_type=code', 302)
+    async marvinAuth()
+    {     
+    }
+
+    @Get('marvin/callback')
+    marvinAuthRedirect(@Query('code') code: string, @Query('state') state: string)
+    {
+        return this.authService.marvinLogin(code, state);
+    }
+
 
     @Post('local/signup')
     @HttpCode(HttpStatus.CREATED)
