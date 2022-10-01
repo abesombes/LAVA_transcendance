@@ -180,7 +180,23 @@ export class AuthService {
                 redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
               })
               .then(function (response) {
-                console.log(response.data.access_token);
+                var at: string = response.data.access_token;
+                if (!at)
+                    return ("Access Token Error");
+                console.log("AccessToken: " + at);
+                const config = {
+                        headers: {
+                            "Authorization": "Bearer " + at,
+                        },
+                };    
+                axios
+                .get(process.env.MARVIN_API_ME_URL, config)
+                .then(({ data: isData }) => {
+                  console.log(isData);
+                })
+                .catch(error => {
+                  console.log(error);
+                });
               })
               .catch(function (error) {
                 console.log(error);
