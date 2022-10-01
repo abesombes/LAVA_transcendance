@@ -7,9 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { generateFromEmail, generateUsername } from "unique-username-generator";
 import { generate } from "generate-password";
 import axios from 'axios';
-import { PrismaClient } from '@prisma/client';
 
-const prismac = new PrismaClient();
 @Injectable()
 export class AuthService {
     constructor(
@@ -130,17 +128,41 @@ export class AuthService {
     }
 
     async googleLogin(req){
-    var tokens: Tokens;
-    if (!req.user){
-        return 'No user from Google'
-    }
-    const existing_user = await this.prisma.user.findUnique({
-        where: {
-            email: req.user.email,
-        }
-    });
 
-    if (!existing_user)
+        var tokens: Tokens;
+
+        if (!req.user)
+        {
+            return 'No user from Google';
+        }
+
+        tokens = await this.registerOrSignIn(req.user);
+
+        return tokens;
+    }
+
+    async registerOrSignIn(user)
+    {
+        var tokens: Tokens;
+
+        const existing_user = await this.isRegisteredUser(user.email);
+
+        if (!existing_user)
+        {
+            var new_user = await this.createNewUserInDB(user);
+            tokens = await this.getTokens(new_user.id, new_user.email);
+            await this.updateRtHash(new_user.id, tokens.refresh_token);
+        }
+        else
+        {
+            console.log("Welcome back existing User");
+            tokens = await this.getTokens(existing_user.id, existing_user.email);
+            await this.updateRtHash(existing_user.id, tokens.refresh_token);
+        }
+        return tokens;
+    }
+
+    async createNewUserInDB(user)
     {
         const password = generate(
             {	
@@ -148,28 +170,46 @@ export class AuthService {
                 numbers: true
             });
         const hash = await this.hashData(password);
+
+        var new_nickname = this.generateUniqueNickname(user);
+
         const new_user = await this.prisma.user.create({
             data: {
-                email: req.user.email,
-                firstname: req.user.firstName,
-                surname: req.user.lastName,
-                nickname: generateFromEmail(req.user.email, 3),
+                email: user.email,
+                firstname: user.firstName,
+                surname: user.lastName,
+                nickname: new_nickname,
                 hash: hash,
-                avatar: req.user.picture
+                avatar: user.picture
             },
         })
-        tokens = await this.getTokens(new_user.id, new_user.email);
-        await this.updateRtHash(new_user.id, tokens.refresh_token);
-    }
-    else
-    {
-        console.log("Welcome back existing User");
-        tokens = await this.getTokens(existing_user.id, existing_user.email);
-        await this.updateRtHash(existing_user.id, tokens.refresh_token);
-    }
-    return tokens;
+        return new_user;
     }
 
+    generateUniqueNickname(user)
+    {
+        var generated_nickname: string = generateFromEmail(user.email, 3);
+        while (this.findUserByNickname(generated_nickname)){
+            generated_nickname = generateFromEmail(user.email, 3);
+        }
+        return generated_nickname;
+    }
+
+    async isRegisteredUser(user_email: string) {
+        return await this.prisma.user.findUnique({
+            where: {
+                email: user_email,
+            }
+        });
+    }
+
+    async findUserByNickname(user){
+        return await this.prisma.user.findUnique({
+            where: {
+                nickname: user.nickname,
+            }
+        });
+    }
 
     async marvinLogin(code: string, state: string){
 
