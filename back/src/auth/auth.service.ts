@@ -6,6 +6,7 @@ import { Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { generateFromEmail, generateUsername } from "unique-username-generator";
 import { generate } from "generate-password";
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -169,8 +170,20 @@ export class AuthService {
 
 
     async marvinLogin(code: string, state: string){
-        if (!state || state != 'm5TZ6Abf9rd9Z5WF74W2')
+        if (!state || state != process.env.MARVIN_OUR_API_STATE)
             return ("Illegal middleman detection!");
-
+            axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
+                grant_type: "authorization_code",
+                client_id: process.env.MARVIN_CLIENT_ID,
+                client_secret:process.env.MARVIN_CLIENT_SECRET,
+                code: code,
+                redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
+              })
+              .then(function (response) {
+                console.log(response);
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
     }
 }

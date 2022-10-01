@@ -35,7 +35,7 @@ RUN npm install --save @types/passport-jwt
 RUN npm install @nestjs/passport passport
 RUN npm install unique-username-generator --save
 RUN npm install generate-password --save
-RUN npm i --save @nestjs/axios
+RUN npm i --save @nestjs/axios axios
 # RUN npm install jsonwebtoken
 
 # COPY Prisma files

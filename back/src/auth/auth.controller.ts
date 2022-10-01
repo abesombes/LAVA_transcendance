@@ -24,7 +24,7 @@ export class AuthController {
     }
 
     @Get('marvin')
-    @Redirect('https://api.intra.42.fr/oauth/authorize?client_id=42a3b64eee675b3850058c804e485115de4a51ddc88cc1c76f093f17d48568ee&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fmarvin%2Fcallback&state=m5TZ6Abf9rd9Z5WF74W2&response_type=code', 302)
+    @Redirect(process.env.MARVIN_OUR_API_URL, 302)
     async marvinAuth()
     {     
     }
