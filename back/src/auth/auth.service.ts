@@ -180,7 +180,7 @@ export class AuthService {
                 redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
               })
               .then(function (response) {
-                console.log(response);
+                console.log(response.data.access_token);
               })
               .catch(function (error) {
                 console.log(error);
