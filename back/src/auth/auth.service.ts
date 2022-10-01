@@ -7,7 +7,9 @@ import { JwtService } from '@nestjs/jwt';
 import { generateFromEmail, generateUsername } from "unique-username-generator";
 import { generate } from "generate-password";
 import axios from 'axios';
+import { PrismaClient } from '@prisma/client';
 
+const prismac = new PrismaClient();
 @Injectable()
 export class AuthService {
     constructor(
@@ -170,36 +172,79 @@ export class AuthService {
 
 
     async marvinLogin(code: string, state: string){
+
         if (!state || state != process.env.MARVIN_OUR_API_STATE)
             return ("Illegal middleman detection!");
-            axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
-                grant_type: "authorization_code",
-                client_id: process.env.MARVIN_CLIENT_ID,
-                client_secret:process.env.MARVIN_CLIENT_SECRET,
-                code: code,
-                redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
-              })
-              .then(function (response) {
-                var at: string = response.data.access_token;
-                if (!at)
-                    return ("Access Token Error");
-                console.log("AccessToken: " + at);
-                const config = {
-                        headers: {
-                            "Authorization": "Bearer " + at,
-                        },
-                };    
-                axios
-                .get(process.env.MARVIN_API_ME_URL, config)
-                .then(({ data: isData }) => {
-                  console.log(isData);
+
+        let response_token_request = await axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
+            grant_type: "authorization_code",
+            client_id: process.env.MARVIN_CLIENT_ID,
+            client_secret:process.env.MARVIN_CLIENT_SECRET,
+            code: code,
+            redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
+            })
+
+        var at: string = response_token_request.data.access_token;
+
+        if (!at)
+            return ("Access Token Error");
+
+        console.log("AccessToken: " + at);
+
+        const config = {
+                headers: {
+                    "Authorization": "Bearer " + at,
+                },
+        };    
+        axios
+        .get(process.env.MARVIN_API_ME_URL, config)
+        .then(async ({ data: data }) => {
+            console.log(data);
+            if (!data)
+                return "No info about this user";
+            console.log(data.email);
+            const existing_user = await this.prisma.user.findUnique({
+                where: {
+                    email: data.email,
+                }
+            });
+            var tokens: Tokens;
+            if (!existing_user)
+            {
+                const password = generate(
+                    {	
+                        length: 10,
+                        numbers: true
+                    });
+                const hash = await this.hashData(password);
+                const new_user = await this.prisma.user.create({
+                    data: {
+                        email: data.email,
+                        firstname: data.first_name,
+                        surname: data.last_name,
+                        nickname: generateFromEmail(data.email, 3),
+                        hash: hash,
+                        avatar: data.image_url
+                    },
                 })
-                .catch(error => {
-                  console.log(error);
-                });
-              })
-              .catch(function (error) {
-                console.log(error);
-              });
-    }
+                tokens = await this.getTokens(new_user.id, new_user.email);
+                await this.updateRtHash(new_user.id, tokens.refresh_token);
+                console.log(tokens);
+                return tokens;
+            }
+            else
+            {
+                console.log("Welcome back existing User");
+                tokens = await this.getTokens(existing_user.id, existing_user.email);
+                await this.updateRtHash(existing_user.id, tokens.refresh_token);
+                console.log(tokens);
+                return tokens;
+            }
+
+        })
+        .catch(error => {
+            console.log(error);
+        });
+            
+}
 }
