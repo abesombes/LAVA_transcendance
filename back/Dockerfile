@@ -36,6 +36,7 @@ RUN npm install @nestjs/passport passport
 RUN npm install unique-username-generator --save
 RUN npm install generate-password --save
 RUN npm install --save @nestjs/axios axios
+RUN npm install npm-run-all --save-dev
 
 # COPY Prisma files
 COPY prisma/ /prisma/
@@ -54,3 +55,5 @@ RUN npx prisma generate
 
 # Creates a "dist" folder with the production build
 RUN npm run build
+
+# ENTRYPOINT [ "sh" ]
