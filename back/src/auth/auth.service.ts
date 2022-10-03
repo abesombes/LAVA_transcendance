@@ -164,9 +164,9 @@ export class AuthService {
 
     async createNewUserFromGoogle(user: GoogleUser)
     {
-        const password = generate({	length: 20, numbers: true });
+        const password = generate({length:20,numbers:true});
         const hash = await this.hashData(password);
-        var new_nickname = this.generateUniqueNickname(user.email);
+        var new_nickname = await this.generateUniqueNickname(user.email);
 
         const new_user = await this.prisma.user.create({
             data: {
@@ -185,6 +185,7 @@ export class AuthService {
     {
         const password = generate({length:20,numbers:true});
         const hash = await this.hashData(password);
+        var new_nickname = await this.generateUniqueNickname(user.email);
 
         console.log("user email: " + user.email);
 
@@ -193,7 +194,7 @@ export class AuthService {
                 email: user.email,
                 firstname: user.first_name,
                 surname: user.last_name,
-                nickname: generateFromEmail(user.email, 3),
+                nickname: new_nickname,
                 hash: hash,
                 avatar: user.image_url
             },
@@ -201,10 +202,10 @@ export class AuthService {
         return new_user;
     }
 
-    generateUniqueNickname(email: string)
+    async generateUniqueNickname(email: string)
     {
         var generated_nickname: string = generateFromEmail(email, 3);
-        while (this.findUserByNickname(generated_nickname)){
+        while (await this.findUserByNickname(generated_nickname)){
             generated_nickname = generateFromEmail(email, 3);
         }
         return generated_nickname;
