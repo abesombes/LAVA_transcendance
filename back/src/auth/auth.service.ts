@@ -183,8 +183,10 @@ export class AuthService {
 
     async createNewUserFromMarvin(user: MarvinUser)
     {
-        const password = generate({	length: 20, numbers: true });
+        const password = generate({length:20,numbers:true});
         const hash = await this.hashData(password);
+
+        console.log("user email: " + user.email);
 
         const new_user = await this.prisma.user.create({
             data: {
@@ -209,7 +211,7 @@ export class AuthService {
     }
 
     async findUserbyEmail(email: string) {
-        return await this.prisma.user.findUnique({
+        return await this.prisma.user.findFirst({
             where: {
                 email: email,
             }
@@ -217,7 +219,7 @@ export class AuthService {
     }
 
     async findUserByNickname(nickname: string){
-        return await this.prisma.user.findUnique({
+        return await this.prisma.user.findFirst({
             where: {
                 nickname: nickname,
             }
@@ -254,16 +256,15 @@ export class AuthService {
                     "Authorization": "Bearer " + at,
                 },
         };    
-        let data: MarvinUser = await axios.get(process.env.MARVIN_API_ME_URL, config);
-        console.log(data);
-        if (!data)
+        let user = await axios.get(process.env.MARVIN_API_ME_URL, config);
+        if (!user.data)
             return "No info about this user";
-        console.log(data.email);
-        const existing_user = await this.findUserbyEmail(data.email);
+        const existing_user = await this.findUserbyEmail(user.data.email);
         var tokens: Tokens;
         if (!existing_user)
         {
-            var new_user = await this.createNewUserFromMarvin(data);
+            console.log()
+            var new_user = await this.createNewUserFromMarvin(user.data);
             tokens = await this.getTokens(new_user.id, new_user.email);
             await this.updateRtHash(new_user.id, tokens.refresh_token);
             console.log(tokens);
