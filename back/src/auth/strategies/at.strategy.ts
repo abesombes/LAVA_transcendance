@@ -6,6 +6,7 @@ type JwtPayload =
 {
     sub: string;
     email: string;
+    twoFactorAuthSecret: string;
 };
 
 // Argon2 hashedAT: $argon2id$v=19$m=4096,t=3,p=1$bk9dyguAxZRbJ8XPd6nGMA$5TREZI21rrzappis7PWNj5LrO3i6SsgloHyxx7104mY

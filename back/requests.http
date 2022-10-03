@@ -56,7 +56,7 @@ content-type: application/json
 POST http://localhost:3000/auth/logout
 Host: localhost
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWE4MDM3MS0zODY5LTQ3NjktYmQwNS04Nzc3OWRiNzQ5OTUiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDc5ODI5NCwiZXhwIjoxNjY1NDAzMDk0fQ.GfnsCyuhtP67VQEUMtju1UsuL6s0zvLXVyde1sJggJU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjY0NjE2MS01MzkyLTQ5ZDQtYjc3Zi1lOWRkZDVlZTM5N2EiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDgxNjYzNSwiZXhwIjoxNjY0ODE3NTM1fQ.UCbqWGKhQ-Zn1dri6JYJ_zTitrHylbzPbA-TJH9Wnu0
 
 ### Auth - Refresh
 
@@ -75,9 +75,9 @@ GET https://api.intra.42.fr/oauth/authorize?client_id=42a3b64eee675b3850058c804e
 
 POST http://localhost:3000/auth/2fa/turn-on
 Host: localhost
-Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWE4MDM3MS0zODY5LTQ3NjktYmQwNS04Nzc3OWRiNzQ5OTUiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDgwNjQ5NiwiZXhwIjoxNjY0ODA3Mzk2fQ.wFC-jzCH9Xk89tLRumaCjZ8tUJcfD8mlTvkwUYLd55w
+Accept: application/x-www-form-urlencoded
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjY0NjE2MS01MzkyLTQ5ZDQtYjc3Zi1lOWRkZDVlZTM5N2EiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDgxNjYzNSwiZXhwIjoxNjY0ODE3NTM1fQ.UCbqWGKhQ-Zn1dri6JYJ_zTitrHylbzPbA-TJH9Wnu0
 
 {
-    "twoFactorAuthCode": "dhgdhf"
+    "twoFactorAuthCode":"qwertyu"
 }

@@ -1,11 +1,11 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../../users/users.service';
+import { UserService } from '../../user/user.service';
 
 @Injectable()
 export class Jwt2faStrategy extends PassportStrategy(Strategy, 'jwt-2fa') {
-  constructor(private readonly userService: UsersService) {
+  constructor(private readonly userService: UserService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: 'secret',
@@ -15,7 +15,7 @@ export class Jwt2faStrategy extends PassportStrategy(Strategy, 'jwt-2fa') {
   async validate(payload: any) {
     const user = await this.userService.findOne(payload.email);
 
-    if (!user.isTwoFactorAuthenticationEnabled) {
+    if (!user.isTwoFactorAuthEnabled) {
       return user;
     }
     if (payload.isTwoFactorAuthenticated) {

@@ -71,11 +71,16 @@ export class AuthController {
     @Post('2fa/turn-on')
     @UseGuards(AuthGuard('jwt'))
     async turnOnTwoFactorAuthentication(@Req() request, @Body() body) {
+        console.log("line 74 OK");
+        console.log("user['sub']: " + request.user['sub']);
+        console.log("user['email']: " + request.user['email']);
+        console.log("user['TwoFactorAuthSecret']: " + request.user['TwoFactorAuthSecret']);
         const isCodeValid =
         this.authService.isTwoFactorAuthCodeValid(
             body.twoFactorAuthCode,
             request.user,
         );
+        console.log("line 79 OK");
         if (!isCodeValid) {
             throw new UnauthorizedException('Wrong authentication code');
         }

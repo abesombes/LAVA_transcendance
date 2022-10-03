@@ -46,6 +46,36 @@ export class AuthService {
         }
     }
 
+    async get2FATokens(userId: string, email: string, twoFactorAuthSecret: string) {
+        const [at, rt] = await Promise.all([
+        this.jwtService.signAsync(
+        {
+            sub: userId,
+            email,
+            twoFactorAuthSecret 
+        }, 
+        {
+            secret: process.env.JWT_AT_SECRET,
+            expiresIn: 60 * 15,
+        },
+    ),
+        this.jwtService.signAsync(
+        {
+            sub: userId,
+            email,
+        }, 
+        {
+            secret: process.env.JWT_RT_SECRET,            
+            expiresIn: 60 * 60 * 24 * 7,
+        },
+        ),
+    ]);
+        return {
+            access_token: at,
+            refresh_token: rt
+        }
+    }
+
     async signupLocal(dto: AuthDto): Promise<Tokens> {
         const hash = await this.hashData(dto.password);
         const newUser = await this.prisma.user.create({
@@ -67,14 +97,18 @@ export class AuthService {
             where: {
                 email: dto.email,
             }
-    });
+        });
 
         if (!user) throw new ForbiddenException("Access Denied");
 
         const passwordMatches = await argon2.verify(user.hash, dto.password);
         if (!passwordMatches) throw new ForbiddenException("Access Denied");
 
-        const tokens = await this.getTokens(user.id, user.email);
+        var tokens: Tokens;
+        // if (user.isTwoFactorAuthEnabled)
+        //     tokens = await this.get2FATokens(user.id, user.email, user.twoFactorAuthSecret);        
+        // else
+            tokens = await this.get2FATokens(user.id, user.email, user.twoFactorAuthSecret);
         await this.updateRtHash(user.id, tokens.refresh_token);
         return tokens;
     }
@@ -312,6 +346,9 @@ export class AuthService {
     }
 
     isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
+        console.log("line 315 OK");
+        console.log("twoFactorAuthCode: " + twoFactorAuthCode);
+        console.log("user.twoFactorAuthSecret: " + user['twoFactorAuthSecret']);
         return authenticator.verify({
           token: twoFactorAuthCode,
           secret: user.twoFactorAuthSecret,
