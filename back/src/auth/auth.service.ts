@@ -335,13 +335,13 @@ export class AuthService {
     async generateTwoFactorAuthSecret(user: User) {
         const secret = authenticator.generateSecret();
 
-        const otpauthUrl = authenticator.keyuri(user.email, 'AUTH_APP_NAME', secret);
+        const otpAuthUrl = authenticator.keyuri(user.email, 'AUTH_APP_NAME', secret);
 
         await this.setTwoFactorAuthSecret(secret, user.id);
 
         return {
         secret,
-        otpauthUrl
+        otpAuthUrl
         }
     }
 
@@ -356,11 +356,12 @@ export class AuthService {
     }
 
     async setTwoFactorAuthSecret(secret: string, userId: string) {
+		console.log("userId: " + userId);
         const UpdateTwoFactorAuthSecret = await this.prisma.user.update(
             {
                 where:
                 {
-                    id: userId
+                    id: userId,
                 }, 
                 data: 
                 {

@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Redirect, Param, Query, Post, Req, Get, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Redirect, Param, Query, Post, Response, Request, Req, Get, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { Tokens } from './types';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+// import { Request } from 'express';
 import { generate } from "generate-password";
 
 
@@ -55,7 +55,7 @@ export class AuthController {
     @UseGuards(AuthGuard('jwt'))
     @Post('logout')
     @HttpCode(HttpStatus.OK)
-    logout(@Req() req: Request) {
+    logout(@Req() req) {
         const user = req.user;
         return this.authService.logout(user['sub']);
     }
@@ -63,7 +63,7 @@ export class AuthController {
     @UseGuards(AuthGuard('jwt-refresh'))
     @Post('refresh')
     @HttpCode(HttpStatus.OK)
-    refreshTokens(@Req() req: Request) {
+    refreshTokens(@Req() req) {
         const user = req.user;
         return this.authService.refreshTokens(user['sub'], user['refreshToken'])
     }
@@ -86,4 +86,11 @@ export class AuthController {
         }
         await this.authService.turnOnTwoFactorAuth(request.user.id);
     }
+	
+	@Post('2fa/generate')
+	@UseGuards(AuthGuard('jwt'))
+    async register(@Response() response, @Request() request) {
+		const { otpAuthUrl } = await this.authService.generateTwoFactorAuthSecret(request.user);
+		return response.json(await this.authService.generateQrCodeDataURL(otpAuthUrl),);
+	}
 }
