@@ -56,16 +56,28 @@ content-type: application/json
 POST http://localhost:3000/auth/logout
 Host: localhost
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwY2Y5NjZkYy03ZjgzLTRjYjYtODc3MS0wMmU3MDllZGM2NGIiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDUyNjI3MywiZXhwIjoxNjY0NTI3MTczfQ.SK9iAY3zB3C6x4nClAK6LF8h8EPBFYeNgQ6TRkz5EEc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWE4MDM3MS0zODY5LTQ3NjktYmQwNS04Nzc3OWRiNzQ5OTUiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDc5ODI5NCwiZXhwIjoxNjY1NDAzMDk0fQ.GfnsCyuhtP67VQEUMtju1UsuL6s0zvLXVyde1sJggJU
 
 ### Auth - Refresh
 
 POST http://localhost:3000/auth/refresh
 Host: localhost
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwY2Y5NjZkYy03ZjgzLTRjYjYtODc3MS0wMmU3MDllZGM2NGIiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDUyNjMwNCwiZXhwIjoxNjY1MTMxMTA0fQ.l7G1a3ZRR1T64HMles7BZZ3Immemvoa7KMGOEyZz4xg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWE4MDM3MS0zODY5LTQ3NjktYmQwNS04Nzc3OWRiNzQ5OTUiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDc5ODI5NCwiZXhwIjoxNjY1NDAzMDk0fQ.GfnsCyuhtP67VQEUMtju1UsuL6s0zvLXVyde1sJggJU
 
 
 
 ### Test Request to Marvin
 GET https://api.intra.42.fr/oauth/authorize?client_id=42a3b64eee675b3850058c804e485115de4a51ddc88cc1c76f093f17d48568ee&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fmarvin%2Fcallback&response_type=code
+
+
+### Test 2FA Authentication Turn-On After Login
+
+POST http://localhost:3000/auth/2fa/turn-on
+Host: localhost
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzYWE4MDM3MS0zODY5LTQ3NjktYmQwNS04Nzc3OWRiNzQ5OTUiLCJlbWFpbCI6InRlc3Q0QGdtYWlsLmNvbSIsImlhdCI6MTY2NDgwNjQ5NiwiZXhwIjoxNjY0ODA3Mzk2fQ.wFC-jzCH9Xk89tLRumaCjZ8tUJcfD8mlTvkwUYLd55w
+
+{
+    "twoFactorAuthCode": "dhgdhf"
+}

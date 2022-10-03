@@ -36,7 +36,7 @@ RUN npm install @nestjs/passport passport
 RUN npm install unique-username-generator --save
 RUN npm install generate-password --save
 RUN npm install --save @nestjs/axios axios
-RUN npm install otplib
+RUN npm install otplib qrcode
 
 # COPY Prisma files
 COPY prisma/ /prisma/

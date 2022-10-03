@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Redirect, Param, Query, Post, Req, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Redirect, Param, Query, Post, Req, Get, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { Tokens } from './types';
@@ -66,5 +66,19 @@ export class AuthController {
     refreshTokens(@Req() req: Request) {
         const user = req.user;
         return this.authService.refreshTokens(user['sub'], user['refreshToken'])
+    }
+
+    @Post('2fa/turn-on')
+    @UseGuards(AuthGuard('jwt'))
+    async turnOnTwoFactorAuthentication(@Req() request, @Body() body) {
+        const isCodeValid =
+        this.authService.isTwoFactorAuthCodeValid(
+            body.twoFactorAuthCode,
+            request.user,
+        );
+        if (!isCodeValid) {
+            throw new UnauthorizedException('Wrong authentication code');
+        }
+        await this.authService.turnOnTwoFactorAuth(request.user.id);
     }
 }

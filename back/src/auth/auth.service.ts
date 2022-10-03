@@ -7,6 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { generateFromEmail, generateUsername } from "unique-username-generator";
 import { generate } from "generate-password";
 import axios from 'axios';
+import { authenticator } from 'otplib';
+import { toDataURL } from 'qrcode';
 
 @Injectable()
 export class AuthService {
@@ -264,7 +266,6 @@ export class AuthService {
         var tokens: Tokens;
         if (!existing_user)
         {
-            console.log()
             var new_user = await this.createNewUserFromMarvin(user.data);
             tokens = await this.getTokens(new_user.id, new_user.email);
             await this.updateRtHash(new_user.id, tokens.refresh_token);
@@ -278,9 +279,62 @@ export class AuthService {
             await this.updateRtHash(existing_user.id, tokens.refresh_token);
             console.log(tokens);
             return tokens;
+        }       
+    }
+
+
+    async turnOnTwoFactorAuth(userId: string) {
+        const ActivateTwoFactorAuthInUser = await this.prisma.user.update(
+            {
+                where:
+                {
+                    id: userId
+                }, 
+                data: 
+                {
+                    isTwoFactorAuthEnabled: true
+                },
+            }
+        );
+    }
+
+    async generateTwoFactorAuthSecret(user: User) {
+        const secret = authenticator.generateSecret();
+
+        const otpauthUrl = authenticator.keyuri(user.email, 'AUTH_APP_NAME', secret);
+
+        await this.setTwoFactorAuthSecret(secret, user.id);
+
+        return {
+        secret,
+        otpauthUrl
         }
+    }
 
-            
-}
+    isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
+        return authenticator.verify({
+          token: twoFactorAuthCode,
+          secret: user.twoFactorAuthSecret,
+        });
+    }
 
+    async setTwoFactorAuthSecret(secret: string, userId: string) {
+        const UpdateTwoFactorAuthSecret = await this.prisma.user.update(
+            {
+                where:
+                {
+                    id: userId
+                }, 
+                data: 
+                {
+                    twoFactorAuthSecret: secret
+                },
+            }
+        );
+      }
+
+    async generateQrCodeDataURL(otpAuthUrl: string) {
+        return toDataURL(otpAuthUrl);
+    }
+      
 }

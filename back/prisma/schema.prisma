@@ -11,12 +11,14 @@ datasource db {
 }
 
 model User {
-  id          String @id @default(uuid())
-  email       String @unique
-  nickname    String @unique
-  firstname   String?
-  surname     String?
-  avatar      String?
-  hash        String
-  hashedRt    String?
+  id                      String @id @default(uuid())
+  email                   String @unique
+  nickname                String @unique
+  firstname               String?
+  surname                 String?
+  avatar                  String?
+  hash                    String
+  hashedRt                String?
+  twoFactorAuthSecret     String?
+  isTwoFactorAuthEnabled  Boolean @default(false)
 }
