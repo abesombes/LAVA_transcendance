@@ -1,8 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException, Req } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto';
 import * as argon2 from 'argon2';
-import { Tokens } from './types';
+import { Tokens, User, MarvinUser, GoogleUser } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { generateFromEmail, generateUsername } from "unique-username-generator";
 import { generate } from "generate-password";
@@ -12,7 +12,7 @@ import axios from 'axios';
 export class AuthService {
     constructor(
         private prisma: PrismaService,
-        private jwtService: JwtService
+        private jwtService: JwtService,
     ) {}
 
     async getTokens(userId: string, email: string) {
@@ -127,7 +127,7 @@ export class AuthService {
         return argon2.hash(data);
     }
 
-    async googleLogin(req){
+    async googleLogin(@Req() req){
 
         var tokens: Tokens;
 
@@ -141,15 +141,15 @@ export class AuthService {
         return tokens;
     }
 
-    async registerOrSignIn(user)
+    async registerOrSignIn(user: GoogleUser)
     {
         var tokens: Tokens;
 
-        const existing_user = await this.isRegisteredUser(user.email);
+        const existing_user = await this.findUserbyEmail(user.email);
 
         if (!existing_user)
         {
-            var new_user = await this.createNewUserInDB(user);
+            var new_user = await this.createNewUserFromGoogle(user);
             tokens = await this.getTokens(new_user.id, new_user.email);
             await this.updateRtHash(new_user.id, tokens.refresh_token);
         }
@@ -162,16 +162,11 @@ export class AuthService {
         return tokens;
     }
 
-    async createNewUserInDB(user)
+    async createNewUserFromGoogle(user: GoogleUser)
     {
-        const password = generate(
-            {	
-                length: 10,
-                numbers: true
-            });
+        const password = generate({	length: 20, numbers: true });
         const hash = await this.hashData(password);
-
-        var new_nickname = this.generateUniqueNickname(user);
+        var new_nickname = this.generateUniqueNickname(user.email);
 
         const new_user = await this.prisma.user.create({
             data: {
@@ -186,43 +181,66 @@ export class AuthService {
         return new_user;
     }
 
-    generateUniqueNickname(user)
+    async createNewUserFromMarvin(user: MarvinUser)
     {
-        var generated_nickname: string = generateFromEmail(user.email, 3);
+        const password = generate({	length: 20, numbers: true });
+        const hash = await this.hashData(password);
+
+        const new_user = await this.prisma.user.create({
+            data: {
+                email: user.email,
+                firstname: user.first_name,
+                surname: user.last_name,
+                nickname: generateFromEmail(user.email, 3),
+                hash: hash,
+                avatar: user.image_url
+            },
+        })
+        return new_user;
+    }
+
+    generateUniqueNickname(email: string)
+    {
+        var generated_nickname: string = generateFromEmail(email, 3);
         while (this.findUserByNickname(generated_nickname)){
-            generated_nickname = generateFromEmail(user.email, 3);
+            generated_nickname = generateFromEmail(email, 3);
         }
         return generated_nickname;
     }
 
-    async isRegisteredUser(user_email: string) {
+    async findUserbyEmail(email: string) {
         return await this.prisma.user.findUnique({
             where: {
-                email: user_email,
+                email: email,
             }
         });
     }
 
-    async findUserByNickname(user){
+    async findUserByNickname(nickname: string){
         return await this.prisma.user.findUnique({
             where: {
-                nickname: user.nickname,
+                nickname: nickname,
             }
         });
     }
 
-    async marvinLogin(code: string, state: string){
-
-        if (!state || state != process.env.MARVIN_OUR_API_STATE)
-            return ("Illegal middleman detection!");
-
-        let response_token_request = await axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
+    async requestMarvinAT(code: string)
+    {
+        return await axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
             grant_type: "authorization_code",
             client_id: process.env.MARVIN_CLIENT_ID,
             client_secret:process.env.MARVIN_CLIENT_SECRET,
             code: code,
             redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
             })
+    }
+
+    async marvinLogin(code: string, state: string){
+
+        if (!state || state != process.env.MARVIN_OUR_API_STATE)
+            throw new UnauthorizedException("Illegal middleman detection!");
+
+        let response_token_request = await this.requestMarvinAT(code);
 
         var at: string = response_token_request.data.access_token;
 
@@ -236,55 +254,31 @@ export class AuthService {
                     "Authorization": "Bearer " + at,
                 },
         };    
-        axios
-        .get(process.env.MARVIN_API_ME_URL, config)
-        .then(async ({ data: data }) => {
-            console.log(data);
-            if (!data)
-                return "No info about this user";
-            console.log(data.email);
-            const existing_user = await this.prisma.user.findUnique({
-                where: {
-                    email: data.email,
-                }
-            });
-            var tokens: Tokens;
-            if (!existing_user)
-            {
-                const password = generate(
-                    {	
-                        length: 10,
-                        numbers: true
-                    });
-                const hash = await this.hashData(password);
-                const new_user = await this.prisma.user.create({
-                    data: {
-                        email: data.email,
-                        firstname: data.first_name,
-                        surname: data.last_name,
-                        nickname: generateFromEmail(data.email, 3),
-                        hash: hash,
-                        avatar: data.image_url
-                    },
-                })
-                tokens = await this.getTokens(new_user.id, new_user.email);
-                await this.updateRtHash(new_user.id, tokens.refresh_token);
-                console.log(tokens);
-                return tokens;
-            }
-            else
-            {
-                console.log("Welcome back existing User");
-                tokens = await this.getTokens(existing_user.id, existing_user.email);
-                await this.updateRtHash(existing_user.id, tokens.refresh_token);
-                console.log(tokens);
-                return tokens;
-            }
+        let data: MarvinUser = await axios.get(process.env.MARVIN_API_ME_URL, config);
+        console.log(data);
+        if (!data)
+            return "No info about this user";
+        console.log(data.email);
+        const existing_user = await this.findUserbyEmail(data.email);
+        var tokens: Tokens;
+        if (!existing_user)
+        {
+            var new_user = await this.createNewUserFromMarvin(data);
+            tokens = await this.getTokens(new_user.id, new_user.email);
+            await this.updateRtHash(new_user.id, tokens.refresh_token);
+            console.log(tokens);
+            return tokens;
+        }
+        else
+        {
+            console.log("Welcome back existing User");
+            tokens = await this.getTokens(existing_user.id, existing_user.email);
+            await this.updateRtHash(existing_user.id, tokens.refresh_token);
+            console.log(tokens);
+            return tokens;
+        }
 
-        })
-        .catch(error => {
-            console.log(error);
-        });
             
 }
+
 }

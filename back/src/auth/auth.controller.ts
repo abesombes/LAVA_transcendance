@@ -32,7 +32,11 @@ export class AuthController {
     @Get('marvin/callback')
     marvinAuthRedirect(@Query('code') code: string, @Query('state') state: string)
     {
-        return this.authService.marvinLogin(code, state);
+        try {
+            return this.authService.marvinLogin(code, state);
+          } catch (error) {
+        throw error;
+        }
     }
 
 
