@@ -74,7 +74,7 @@ export class AuthController {
         console.log("line 74 OK");
         console.log("user['sub']: " + request.user['sub']);
         console.log("user['email']: " + request.user['email']);
-        console.log("user['TwoFactorAuthSecret']: " + request.user['TwoFactorAuthSecret']);
+        console.log("user['twoFactorAuthSecret']: " + request.user['twoFactorAuthSecret']);
         const isCodeValid =
         this.authService.isTwoFactorAuthCodeValid(
             body.twoFactorAuthCode,
