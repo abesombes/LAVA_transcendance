@@ -69,6 +69,7 @@ export class AuthController {
     }
 
     @Post('2fa/turn-on')
+	@HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard('jwt'))
     async turnOnTwoFactorAuthentication(@Req() request, @Body() body) {
         console.log("line 74 OK");
@@ -88,9 +89,28 @@ export class AuthController {
     }
 	
 	@Post('2fa/generate')
+    @HttpCode(HttpStatus.CREATED)
 	@UseGuards(AuthGuard('jwt'))
     async register(@Response() response, @Request() request) {
 		const { otpAuthUrl } = await this.authService.generateTwoFactorAuthSecret(request.user);
+		console.log(otpAuthUrl);
 		return response.json(await this.authService.generateQrCodeDataURL(otpAuthUrl),);
+		// return response.json(await this.authService.generateQrCode(response, otpAuthUrl));
 	}
+
+	@Post('2fa/authenticate')
+	@HttpCode(HttpStatus.OK)
+	@UseGuards(AuthGuard('jwt'))
+	async authenticate(@Request() request, @Body() body) {
+		const isCodeValid = this.authService.isTwoFactorAuthCodeValid(
+			body.twoFactorAuthCode,
+			request.user,
+		);
+
+		if (!isCodeValid) {
+			throw new UnauthorizedException('Wrong authentication code');
+		}
+		return this.authService.signin2FA(request.user);
+	}
+
 }

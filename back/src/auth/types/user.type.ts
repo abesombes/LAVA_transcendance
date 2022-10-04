@@ -7,7 +7,8 @@ export type User = {
     avatar: string,
     hash: string,
     hashedRt: string,
-    twoFactorAuthSecret: string
+    twoFactorAuthSecret: string,
+	isTwoFactorAuthEnabled: boolean
 }
 
 export type GoogleUser = {

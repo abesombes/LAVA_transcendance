@@ -8,371 +8,396 @@ import { generateFromEmail, generateUsername } from "unique-username-generator";
 import { generate } from "generate-password";
 import axios from 'axios';
 import { authenticator } from 'otplib';
-import { toDataURL } from 'qrcode';
+import { toDataURL, toFileStream } from 'qrcode';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private prisma: PrismaService,
-        private jwtService: JwtService,
-    ) {}
+	constructor(
+		private prisma: PrismaService,
+		private jwtService: JwtService,
+	) {}
 
-    async getTokens(userId: string, email: string) {
-        const [at, rt] = await Promise.all([
-        this.jwtService.signAsync(
-        {
-            sub: userId,
-            email,
-        }, 
-        {
-            secret: process.env.JWT_AT_SECRET,
-            expiresIn: 60 * 15,
-        },
-    ),
-        this.jwtService.signAsync(
-        {
-            sub: userId,
-            email,
-        }, 
-        {
-            secret: process.env.JWT_RT_SECRET,            
-            expiresIn: 60 * 60 * 24 * 7,
-        },
-        ),
-    ]);
-        return {
-            access_token: at,
-            refresh_token: rt
-        }
-    }
+	async getTokens(userId: string, email: string) {
+		const [at, rt] = await Promise.all([
+		this.jwtService.signAsync(
+		{
+			sub: userId,
+			email,
+		}, 
+		{
+			secret: process.env.JWT_AT_SECRET,
+			expiresIn: 60 * 15,
+		},
+	),
+		this.jwtService.signAsync(
+		{
+			sub: userId,
+			email,
+		}, 
+		{
+			secret: process.env.JWT_RT_SECRET,            
+			expiresIn: 60 * 60 * 24 * 7,
+		},
+		),
+	]);
+		return {
+			access_token: at,
+			refresh_token: rt
+		}
+	}
 
-    async get2FATokens(userId: string, email: string, twoFactorAuthSecret: string) {
-        const [at, rt] = await Promise.all([
-        this.jwtService.signAsync(
-        {
-            sub: userId,
-            email,
-            twoFactorAuthSecret 
-        }, 
-        {
-            secret: process.env.JWT_AT_SECRET,
-            expiresIn: 60 * 15,
-        },
-    ),
-        this.jwtService.signAsync(
-        {
-            sub: userId,
-            email,
-        }, 
-        {
-            secret: process.env.JWT_RT_SECRET,            
-            expiresIn: 60 * 60 * 24 * 7,
-        },
-        ),
-    ]);
-        return {
-            access_token: at,
-            refresh_token: rt
-        }
-    }
+	async get2FATokens(userId: string, email: string, twoFactorAuthSecret: string) {
+		const [at, rt] = await Promise.all([
+		this.jwtService.signAsync(
+		{
+			sub: userId,
+			email,
+			twoFactorAuthSecret 
+		}, 
+		{
+			secret: process.env.JWT_AT_SECRET,
+			expiresIn: 60 * 15,
+		},
+	),
+		this.jwtService.signAsync(
+		{
+			sub: userId,
+			email,
+		}, 
+		{
+			secret: process.env.JWT_RT_SECRET,            
+			expiresIn: 60 * 60 * 24 * 7,
+		},
+		),
+	]);
+		return {
+			access_token: at,
+			refresh_token: rt
+		}
+	}
 
-    async signupLocal(dto: AuthDto): Promise<Tokens> {
-        const hash = await this.hashData(dto.password);
-        const newUser = await this.prisma.user.create({
-            data: {
-                email: dto.email,
-                nickname: dto.nickname,
-                hash: hash,
-            }
-        });
-        const tokens = await this.getTokens(newUser.id, newUser.email);
-        await this.updateRtHash(newUser.id, tokens.refresh_token);
-        return tokens;
-    }
-
-
-
-    async signinLocal(dto: AuthDto): Promise<Tokens>{
-        const user = await this.prisma.user.findUnique({
-            where: {
-                email: dto.email,
-            }
-        });
-
-        if (!user) throw new ForbiddenException("Access Denied");
-
-        const passwordMatches = await argon2.verify(user.hash, dto.password);
-        if (!passwordMatches) throw new ForbiddenException("Access Denied");
-
-        var tokens: Tokens;
-        // if (user.isTwoFactorAuthEnabled)
-        //     tokens = await this.get2FATokens(user.id, user.email, user.twoFactorAuthSecret);        
-        // else
-            tokens = await this.get2FATokens(user.id, user.email, user.twoFactorAuthSecret);
-        await this.updateRtHash(user.id, tokens.refresh_token);
-        return tokens;
-    }
-
-    async logout(userId: string){
-        await this.prisma.user.updateMany({
-            where: {
-                id: userId,
-                hashedRt:
-                {
-                    not: null,
-                },
-            },
-            data: {
-                hashedRt: null,
-            },
-        });
-    }
-
-    async refreshTokens(userId: string, rt: string){
-        const existing_user = await this.prisma.user.findUnique({
-            where: {
-                id: userId
-            }
-        });
-        if (!existing_user) throw new ForbiddenException("Access Denied");
-        
-        const rtMatches = await argon2.verify(existing_user.hashedRt, rt);
-        if (!rtMatches)
-            console.log("wrong password provided");
-        if (!rtMatches) throw new ForbiddenException("Access Denied");
-
-        const tokens = await this.getTokens(existing_user.id, existing_user.email);
-        await this.updateRtHash(existing_user.id, tokens.refresh_token);
-        return tokens;
-    }
+	async signupLocal(dto: AuthDto): Promise<Tokens> {
+		const hash = await this.hashData(dto.password);
+		const newUser = await this.prisma.user.create({
+			data: {
+				email: dto.email,
+				nickname: dto.nickname,
+				hash: hash,
+			}
+		});
+		const tokens = await this.getTokens(newUser.id, newUser.email);
+		await this.updateRtHash(newUser.id, tokens.refresh_token);
+		return tokens;
+	}
 
 
-    async updateRtHash(userId: string, rt: string) {
-        const hash = await this.hashData(rt)
-        await this.prisma.user.update({
-            where: {
-                id: userId,
-            },
-            data: {
-                hashedRt: hash,
-            }
-        });
-    }
 
-    hashData(data:string){
-        return argon2.hash(data);
-    }
+	async signinLocal(dto: AuthDto): Promise<Tokens>{
+		const user = await this.prisma.user.findUnique({
+			where: {
+				email: dto.email,
+			}
+		});
 
-    async googleLogin(@Req() req){
+		if (!user) throw new ForbiddenException("Access Denied");
 
-        var tokens: Tokens;
+		const passwordMatches = await argon2.verify(user.hash, dto.password);
+		if (!passwordMatches) throw new ForbiddenException("Access Denied");
 
-        if (!req.user)
-        {
-            return 'No user from Google';
-        }
+		var tokens: Tokens;
+		tokens = await this.get2FATokens(user.id, user.email, user.twoFactorAuthSecret);
+		await this.updateRtHash(user.id, tokens.refresh_token);
+		return tokens;
+	}
 
-        tokens = await this.registerOrSignIn(req.user);
+	async logout(userId: string){
+		await this.prisma.user.updateMany({
+			where: {
+				id: userId,
+				hashedRt:
+				{
+					not: null,
+				},
+			},
+			data: {
+				hashedRt: null,
+			},
+		});
+	}
 
-        return tokens;
-    }
+	async refreshTokens(userId: string, rt: string){
+		const existing_user = await this.prisma.user.findUnique({
+			where: {
+				id: userId
+			}
+		});
+		if (!existing_user) throw new ForbiddenException("Access Denied");
+		
+		const rtMatches = await argon2.verify(existing_user.hashedRt, rt);
+		if (!rtMatches)
+			console.log("wrong password provided");
+		if (!rtMatches) throw new ForbiddenException("Access Denied");
 
-    async registerOrSignIn(user: GoogleUser)
-    {
-        var tokens: Tokens;
-
-        const existing_user = await this.findUserbyEmail(user.email);
-
-        if (!existing_user)
-        {
-            var new_user = await this.createNewUserFromGoogle(user);
-            tokens = await this.getTokens(new_user.id, new_user.email);
-            await this.updateRtHash(new_user.id, tokens.refresh_token);
-        }
-        else
-        {
-            console.log("Welcome back existing User");
-            tokens = await this.getTokens(existing_user.id, existing_user.email);
-            await this.updateRtHash(existing_user.id, tokens.refresh_token);
-        }
-        return tokens;
-    }
-
-    async createNewUserFromGoogle(user: GoogleUser)
-    {
-        const password = generate({length:20,numbers:true});
-        const hash = await this.hashData(password);
-        var new_nickname = await this.generateUniqueNickname(user.email);
-
-        const new_user = await this.prisma.user.create({
-            data: {
-                email: user.email,
-                firstname: user.firstName,
-                surname: user.lastName,
-                nickname: new_nickname,
-                hash: hash,
-                avatar: user.picture
-            },
-        })
-        return new_user;
-    }
-
-    async createNewUserFromMarvin(user: MarvinUser)
-    {
-        const password = generate({length:20,numbers:true});
-        const hash = await this.hashData(password);
-        var new_nickname = await this.generateUniqueNickname(user.email);
-
-        console.log("user email: " + user.email);
-
-        const new_user = await this.prisma.user.create({
-            data: {
-                email: user.email,
-                firstname: user.first_name,
-                surname: user.last_name,
-                nickname: new_nickname,
-                hash: hash,
-                avatar: user.image_url
-            },
-        })
-        return new_user;
-    }
-
-    async generateUniqueNickname(email: string)
-    {
-        var generated_nickname: string = generateFromEmail(email, 3);
-        while (await this.findUserByNickname(generated_nickname)){
-            generated_nickname = generateFromEmail(email, 3);
-        }
-        return generated_nickname;
-    }
-
-    async findUserbyEmail(email: string) {
-        return await this.prisma.user.findFirst({
-            where: {
-                email: email,
-            }
-        });
-    }
-
-    async findUserByNickname(nickname: string){
-        return await this.prisma.user.findFirst({
-            where: {
-                nickname: nickname,
-            }
-        });
-    }
-
-    async requestMarvinAT(code: string)
-    {
-        return await axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
-            grant_type: "authorization_code",
-            client_id: process.env.MARVIN_CLIENT_ID,
-            client_secret:process.env.MARVIN_CLIENT_SECRET,
-            code: code,
-            redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
-            })
-    }
-
-    async marvinLogin(code: string, state: string){
-
-        if (!state || state != process.env.MARVIN_OUR_API_STATE)
-            throw new UnauthorizedException("Illegal middleman detection!");
-
-        let response_token_request = await this.requestMarvinAT(code);
-
-        var at: string = response_token_request.data.access_token;
-
-        if (!at)
-            return ("Access Token Error");
-
-        console.log("AccessToken: " + at);
-
-        const config = {
-                headers: {
-                    "Authorization": "Bearer " + at,
-                },
-        };    
-        let user = await axios.get(process.env.MARVIN_API_ME_URL, config);
-        if (!user.data)
-            return "No info about this user";
-        const existing_user = await this.findUserbyEmail(user.data.email);
-        var tokens: Tokens;
-        if (!existing_user)
-        {
-            var new_user = await this.createNewUserFromMarvin(user.data);
-            tokens = await this.getTokens(new_user.id, new_user.email);
-            await this.updateRtHash(new_user.id, tokens.refresh_token);
-            console.log(tokens);
-            return tokens;
-        }
-        else
-        {
-            console.log("Welcome back existing User");
-            tokens = await this.getTokens(existing_user.id, existing_user.email);
-            await this.updateRtHash(existing_user.id, tokens.refresh_token);
-            console.log(tokens);
-            return tokens;
-        }       
-    }
+		const tokens = await this.getTokens(existing_user.id, existing_user.email);
+		await this.updateRtHash(existing_user.id, tokens.refresh_token);
+		return tokens;
+	}
 
 
-    async turnOnTwoFactorAuth(userId: string) {
-        const ActivateTwoFactorAuthInUser = await this.prisma.user.update(
-            {
-                where:
-                {
-                    id: userId
-                }, 
-                data: 
-                {
-                    isTwoFactorAuthEnabled: true
-                },
-            }
-        );
-    }
+	async updateRtHash(userId: string, rt: string) {
+		const hash = await this.hashData(rt)
+		await this.prisma.user.update({
+			where: {
+				id: userId,
+			},
+			data: {
+				hashedRt: hash,
+			}
+		});
+	}
 
-    async generateTwoFactorAuthSecret(user: User) {
-        const secret = authenticator.generateSecret();
+	hashData(data:string){
+		return argon2.hash(data);
+	}
 
-        const otpAuthUrl = authenticator.keyuri(user.email, 'AUTH_APP_NAME', secret);
+	async googleLogin(@Req() req){
 
-        await this.setTwoFactorAuthSecret(secret, user.id);
+		var tokens: Tokens;
 
-        return {
-        secret,
-        otpAuthUrl
-        }
-    }
+		if (!req.user)
+		{
+			return 'No user from Google';
+		}
 
-    isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
-        console.log("line 315 OK");
-        console.log("twoFactorAuthCode: " + twoFactorAuthCode);
-        console.log("user.twoFactorAuthSecret: " + user['twoFactorAuthSecret']);
-        return authenticator.verify({
-          token: twoFactorAuthCode,
-          secret: user.twoFactorAuthSecret,
-        });
-    }
+		tokens = await this.registerOrSignIn(req.user);
 
-    async setTwoFactorAuthSecret(secret: string, userId: string) {
+		return tokens;
+	}
+
+	async registerOrSignIn(user: GoogleUser)
+	{
+		var tokens: Tokens;
+
+		const existing_user = await this.findUserbyEmail(user.email);
+
+		if (!existing_user)
+		{
+			var new_user = await this.createNewUserFromGoogle(user);
+			tokens = await this.getTokens(new_user.id, new_user.email);
+			await this.updateRtHash(new_user.id, tokens.refresh_token);
+		}
+		else
+		{
+			console.log("Welcome back existing User");
+			tokens = await this.getTokens(existing_user.id, existing_user.email);
+			await this.updateRtHash(existing_user.id, tokens.refresh_token);
+		}
+		return tokens;
+	}
+
+	async createNewUserFromGoogle(user: GoogleUser)
+	{
+		const password = generate({length:20,numbers:true});
+		const hash = await this.hashData(password);
+		var new_nickname = await this.generateUniqueNickname(user.email);
+
+		const new_user = await this.prisma.user.create({
+			data: {
+				email: user.email,
+				firstname: user.firstName,
+				surname: user.lastName,
+				nickname: new_nickname,
+				hash: hash,
+				avatar: user.picture
+			},
+		})
+		return new_user;
+	}
+
+	async createNewUserFromMarvin(user: MarvinUser)
+	{
+		const password = generate({length:20,numbers:true});
+		const hash = await this.hashData(password);
+		var new_nickname = await this.generateUniqueNickname(user.email);
+
+		console.log("user email: " + user.email);
+
+		const new_user = await this.prisma.user.create({
+			data: {
+				email: user.email,
+				firstname: user.first_name,
+				surname: user.last_name,
+				nickname: new_nickname,
+				hash: hash,
+				avatar: user.image_url
+			},
+		})
+		return new_user;
+	}
+
+	async generateUniqueNickname(email: string)
+	{
+		var generated_nickname: string = generateFromEmail(email, 3);
+		while (await this.findUserByNickname(generated_nickname)){
+			generated_nickname = generateFromEmail(email, 3);
+		}
+		return generated_nickname;
+	}
+
+	async findUserbyEmail(email: string) {
+		return await this.prisma.user.findFirst({
+			where: {
+				email: email,
+			}
+		});
+	}
+
+	async findUserByNickname(nickname: string){
+		return await this.prisma.user.findFirst({
+			where: {
+				nickname: nickname,
+			}
+		});
+	}
+
+	async requestMarvinAT(code: string)
+	{
+		return await axios.post(process.env.MARVIN_OAUTH_TOKEN_URL, {
+			grant_type: "authorization_code",
+			client_id: process.env.MARVIN_CLIENT_ID,
+			client_secret:process.env.MARVIN_CLIENT_SECRET,
+			code: code,
+			redirect_uri:process.env.MARVIN_OAUTH_CALLBACK_URL
+			})
+	}
+
+	async marvinLogin(code: string, state: string){
+
+		if (!state || state != process.env.MARVIN_OUR_API_STATE)
+			throw new UnauthorizedException("Illegal middleman detection!");
+
+		let response_token_request = await this.requestMarvinAT(code);
+
+		var at: string = response_token_request.data.access_token;
+
+		if (!at)
+			return ("Access Token Error");
+
+		console.log("AccessToken: " + at);
+
+		const config = {
+				headers: {
+					"Authorization": "Bearer " + at,
+				},
+		};    
+		let user = await axios.get(process.env.MARVIN_API_ME_URL, config);
+		if (!user.data)
+			return "No info about this user";
+		const existing_user = await this.findUserbyEmail(user.data.email);
+		var tokens: Tokens;
+		if (!existing_user)
+		{
+			var new_user = await this.createNewUserFromMarvin(user.data);
+			tokens = await this.getTokens(new_user.id, new_user.email);
+			await this.updateRtHash(new_user.id, tokens.refresh_token);
+			console.log(tokens);
+			return tokens;
+		}
+		else
+		{
+			console.log("Welcome back existing User");
+			tokens = await this.getTokens(existing_user.id, existing_user.email);
+			await this.updateRtHash(existing_user.id, tokens.refresh_token);
+			console.log(tokens);
+			return tokens;
+		}       
+	}
+
+
+	async turnOnTwoFactorAuth(userId: string) {
+		const ActivateTwoFactorAuthInUser = await this.prisma.user.update(
+			{
+				where:
+				{
+					id: userId
+				}, 
+				data: 
+				{
+					isTwoFactorAuthEnabled: true
+				},
+			}
+		);
+	}
+
+	async generateTwoFactorAuthSecret(user: User) {
+		const secret = authenticator.generateSecret();
+		const otpAuthUrl = authenticator.keyuri(user.email, 'AXIES TRANSCENDENCE', secret);
+
+		await this.setTwoFactorAuthSecret(secret, user['sub']);
+
+		return {
+		secret,
+		otpAuthUrl
+		}
+	}
+
+	isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
+		return authenticator.verify({
+		  token: twoFactorAuthCode,
+		  secret: user.twoFactorAuthSecret,
+		});
+	}
+
+	async setTwoFactorAuthSecret(secret: string, userId: string) {
 		console.log("userId: " + userId);
-        const UpdateTwoFactorAuthSecret = await this.prisma.user.update(
-            {
-                where:
-                {
-                    id: userId,
-                }, 
-                data: 
-                {
-                    twoFactorAuthSecret: secret
-                },
-            }
-        );
-      }
+		const UpdateTwoFactorAuthSecret = await this.prisma.user.update(
+			{
+				where:
+				{
+					id: userId,
+				}, 
+				data: 
+				{
+					twoFactorAuthSecret: secret
+				},
+			}
+		);
+	  }
 
-    async generateQrCodeDataURL(otpAuthUrl: string) {
-        return toDataURL(otpAuthUrl);
-    }
-      
+	async generateQrCodeDataURL(otpAuthUrl: string) {
+		return toDataURL(otpAuthUrl);
+	}
+
+	async generateQrCode(stream: Response, otpAuthUrl: string)	{
+		return toFileStream(stream, otpAuthUrl);
+	}
+
+	async signin2FA(user: User) {
+		const existing_user = await this.prisma.user.findUnique({
+			where: {
+				email: user.email,
+			}
+		});
+
+		if (!user) throw new ForbiddenException("Access Denied");
+
+		const payload = {
+		  email: user.email,
+		  isTwoFactorAuthEnabled: !!user.isTwoFactorAuthEnabled,
+		  isTwoFactorAuthOK: true,
+		};
+
+		// const passwordMatches = await argon2.verify(existing_user.hash, user.password);
+		// if (!passwordMatches) throw new ForbiddenException("Access Denied");
+
+		var tokens: Tokens;
+		tokens = await this.get2FATokens(user.id, user.email, user.twoFactorAuthSecret);
+		await this.updateRtHash(user.id, tokens.refresh_token);
+		return tokens;
+		// return {
+		//   email: payload.email,
+		//   access_token: this.jwtService.sign(payload),
+		// };
+	}
+
 }
